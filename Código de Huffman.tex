@@ -1,0 +1,200 @@
+\documentclass[a4paper]{article} 
+     
+        
+\usepackage[spanish,activeacute]{babel}
+%\usepackage[utf8]{inputenc}
+\usepackage[round]{natbib}
+\usepackage[T1]{fontenc}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{plain}
+\usepackage{titling}
+\usepackage{color}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{mdframed}
+
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{lightgrey}{rgb}{0.95,0.95,0.95}
+
+\renewcommand*{\lstlistingname}{Programa}
+
+\lstset{
+   language=Python,
+   basicstyle=\ttfamily\small,
+   keywordstyle=\color{deepblue}\bfseries\itshape,
+   commentstyle=\color{deepgreen}\itshape,
+   stringstyle=\color{deepred},
+   backgroundcolor=\color{lightgrey},
+   morekeywords={as,assert,nonlocal,with,yield},
+   showstringspaces=false,
+   numbers=left,
+   rulecolor=\color{black},
+   captionpos=b,
+   frame=leftline,
+   literate=
+   {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+   {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+   {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+   {À}{{\`A}}1 {È}{{\`E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+   {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+   {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+   {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+   {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+   {ã}{{\~a}}1 {ẽ}{{\~e}}1 {ĩ}{{\~i}}1 {õ}{{\~o}}1 {ũ}{{\~u}}1
+   {Ã}{{\~A}}1 {Ẽ}{{\~E}}1 {Ĩ}{{\~I}}1 {Õ}{{\~O}}1 {Ũ}{{\~U}}1
+   {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+   {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+   {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {Ø}{{\O}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+   {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+   {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1 
+}
+
+
+\title{Practica 1: Código Huffman y Primer Teorema de Shannon}
+\author{Pablo Jiménez Poyatos}
+
+
+\begin{document}
+\maketitle
+
+\section{Introducción}
+
+El objetivo de esta práctica es obtener los códigos Huffman binarios para los alfabetos español e inglés ($S_{Esp}$ y $S_{Eng}$, respectivamente) a partir de muestras de texto en cada idioma. Una vez obtenidos, se aplicarán conceptos previamente estudiados tales como el cálculo de la entropía y la longitud media, así como el Primer Teorema de Shannon. Además, se llevará a cabo una comparación de la eficiencia de estos códigos en relación con la codificación binaria estándar (ASCII). La implementación práctica de este trabajo incluirá, ademas de la creación de ambos códigos binarios, el desarrollo de un algoritmo en Python capaz de codificar ``Lorentz'' usando ambos códigos. Posteriormente, se implementará una función para decodificar cualquier cadena, lo que permitirá comprobar la precisión de los resultados obtenidos.
+
+\section{Material usado}
+
+Para realizar esta práctica, se han utilizado los ficheros del campus virtual \textbf{"GCOM2024\_ pract1\_ auxiliar\_ esp.txt"} y \textbf{"GCOM2024\_ pract1\_ auxiliar\_ eng.txt"} como las muestras de texto que vamos a utilizar para crear nuestro código Huffman. Además, he importado en mi script la \textbf{librería os} para verificar cuando un string hace referencia a un archivo o a una cadena de caracteres y las funciones \textbf{log2, e} y \textbf{sqrt} del \textbf{módulo math} para el cálculo de la entropía y de su error.  A continuación, se detalla el funcionamiento de las principales funciones y clases.
+
+\bigskip
+
+La clase \textbf{Nodo} representa un nodo en un árbol binario de búsqueda. Cada uno tiene asociado una clave y un valor, así como referencias a sus hijos izquierdo y derecho. Por otro lado, la clase \textbf{ArbolDePares} implementa un árbol binario de búsqueda para pares clave-valor. Proporciona métodos para \textbf{insertar, eliminar, encontrar el mínimo, contar nodos} y \textbf{generar un diccionario con el código binario}.
+
+\bigskip
+
+
+Para calcular el código de Huffman, primero se cuenta la frecuencia de cada carácter utilizando la función \textbf{``contar\_frecuencias''}. Después, se construye un ArbolDePares con nodos (carácter, (frecuencia, primera aparición)) utilizando la función \textbf{``arbol\_frecuencias''}. Este árbol se ordena según la frecuencia de cada carácter, resolviendo los empates mediante la primera aparición del carácter. Lo utilizamos para obtener los 2 nodos con frecuencias más bajas, los cuales se eliminan del árbol. Sus caracteres se concatenan formando una nueva cadena. Esta cadena junto con la suma de sus frecuencias y el mínimo de las primeras apariciones, se inserta en el árbol. Paralelamente, se crea un nuevo árbol que almacena esta unión, y se añade a un diccionario cuya clave es la unión de los caracteres y el valor, el árbol. Continuamos este proceso hasta que el árbol inicial contiene únicamente un nodo. En este momento, el valor del diccionario con clave la cadena de caracteres de este último nodo, es el árbol de Huffman que buscamos. Finalmente, se genera el código de Huffman utilizando la función \textbf{``dic\_arbol''}.
+
+\bigskip
+
+Para codificar una palabra, utilizo \textbf{``codificar\_palabra''}. Esta función, toma una palabra como entrada y un diccionario que asigna códigos a cada carácter. Luego, itera sobre cada carácter y busca en el diccionario su código correspondiente. Los resultados, se concatenan para formar la codificación de la palabra completa. Para comprobarlo,  utilizo la función \textbf{``decodificacion''}, que toma una cadena binaria y un diccionario de traducción y te devuelve la palabra correspondiente.
+
+\bigskip
+
+Por último, para el estudio de la entropía, longitud media, error y eficiencia respecto del código binario usual, hemos utilizado las funciones \textbf{``longitudMedia\_entropia''} y \textbf{``longitudCBU''}. La primera te calcula la longitud media, la entropía y el error. La segunda, calcula la longitud de una cadena después de codificarla de la forma estándar usando ASCII. 
+
+
+\section{Resultados}
+
+La \textbf{codificación de Huffman} asigna códigos de longitud variable a cada carácter de manera que los caracteres más frecuentes tengan códigos más cortos. El código de cada idioma es:
+
+\begin{itemize}
+\item $S_{\text{Es}}$ = \{``a'': 000, ``.'': 0010000, ``é'': 00100010, ``E'': 001000110, ``j'': 001000111, ``R'': 001001000, \\``í'': 001001001, ``k'': 00100101, ``-'': 00100110, ``4'': 001001110, ``C'': 001001111, ``p'': 00101, ``s'': 0011, ``e'': 010, ``r'': 0110, ``m'': 01110, ``u'': 01111, ``n'': 1000, ``o'': 1001, `` '': 101, ``l'': 11000, ``b'': 1100100, \\``z'': 1100101, ``q'': 11001100, ``L'': 11001101, ``ó'': 1100111, ``i'': 1101, ``d'': 11100, ``t'': 11101, ``c'': 11110, ``f'': 1111100, ``v'': 1111101, ``M'': 111111000, ``x'': 1111110010, ``P'': 1111110011, ``w'': 111111010, \\``g'': 111111011, ``,'': 11111110, ``y'': 111111110, ``h'': 111111111\}
+
+\item $S_{\text{En}}$ = \{``g'': 0000000, ``,'': 0000001, ``k'': 0000010, ``L'': 00000110, ``M'': 00000111, ``c'': 00001, ``f'': 00010, ``l'': 00011, ``e'': 001, ``u'': 010000,`` x'': 010001000, ``S'': 010001001, ``E'': 010001010, ``R'': 010001011, \\ ``.'': 0100011, ``h'': 01001, ``r'': 0101, ``d'': 01100, ``m'': 01101, ``o'': 0111, ``a'': 1000, ``s'': 1001, ``t'': 1010, ``n'': 1011, ``,'': 110, ``4'': 111000000, ``-'': 111000001, ``A'': 111000010, ``T'': 111000011, ``w'': 1110001, \\``b'': 1110010, ``z'': 11100110, ``q'': 11100111, ``y'': 1110100, ``v'': 1110101, ``p'': 111011, ``i'': 1111\}
+\end{itemize}
+
+En el anexo he añadido una tabla \ref{tab:huffman} con la codificación de cada carácter en ambos idiomas.
+
+\bigskip
+
+Una vez hemos obtenido los códigos de cada carácter en ambas lenguas, vamos a comprobar que se verifica el \textbf{Primer Teorema de Shannon}, es decir, que \textit{el algoritmo de Huffman acota la longitud media del código simbólico según: $H(C) \leq L(C) < H(C) + 1.$} Para ello, calcularemos la \textbf{longitud media} y la \textbf{entropía} de cada sistema utilizando las siguientes fórmulas: 
+\begin{equation} \label{eq:longMed}
+L(C):= \frac{1}{W} \sum_{i=1}^{N} w_i |c_i|  \hspace{5mm}\textup{;} \hspace{5mm} H(S) := \ensuremath{-} \sum_{j=1}^N P_j \log_2(P_j) =  \ensuremath{-} \sum_{j=1}^N \frac{F_j}{W} \cdot \log_2(\frac{F_j}{W})
+\end{equation}
+donde W es el número total de caracteres de la muestra, N el número de caracteres diferentes, $|c_i|$ la longitud de la codificación del carácter i, $P_j$ las probabilidades de cada carácter y $F_j$ son las frecuencias de cada carácter en la  muestra.
+
+\bigskip
+
+Aplicando la \textbf{longitud media} \ref{eq:longMed}.1 en $S_{Esp}$ y en $S_{Eng}$ , obtenemos que ambas son iguales y valen \\ $ L(S_{\textup{Esp}}) = L(S_{\textup{Eng}}) = 4.30$. Por otro lado, al calcular la entropía \ref{eq:longMed}.2 en la funcion \texttt{``longitudMedia\_} \texttt{entropia(texto, S)''}, obtenemos un \textbf{error} del 0.02 (utilizando la propagación cuadrática del error), por lo que redondeamos ambas \textbf{entropías} a 2 cifras significativas. En particular, obtenemos el mismo valor $ H(S_{\textup{Esp}}) = H(S_{\textup{Eng}}) = 4.28 \pm 0.02$. Entonces, podemos verificar que  $H(C) \leq L(C) < H(C) + 1.$
+\begin{equation*}
+H(S_{\textup{Esp}}) = 4.28 \pm 0.02 \leq L(S_{\textup{Esp}}) = 4.30 < H(S_{\textup{Esp}}) + 1 = 5.28 \pm 0.02 
+\end{equation*}
+\begin{equation*}
+H(S_{\textup{Eng}}) = 4.28 \pm 0.02 \leq L(S_{\textup{Eng}}) = 4.30 < H(S_{\textup{Eng}}) + 1 = 5.28 \pm 0.02
+\end{equation*}
+
+\bigskip
+
+En la segunda parte de la práctica se pide codificar la palabra ``Lorentz'' usando los códigos anteriores. Usando $S_{Esp}$, la \textbf{codificación} es 11001101100101100101000111011100101 y usando $S_{Eng}$, 0000011001110- 1010011011101011100110, ambas con una longitud de 35 bits. Por otro lado, usando la \textbf{codificación binaria usual (ASCII)}, obtenemos 1001100110111111100101100101110111011101001111010, con una longitud de 49 bits, un 140\% mas larga. Esto prueba que es \textbf{más ineficiente} que usando Huffman. 
+
+\bigskip
+
+Por último, para verificar nuestros resultados, \textbf{decodificamos} estas cadenas y comprobamos que obtenemos la palabra ``Lorentz'' en ambos idiomas.
+
+
+\section{Conclusión}
+
+Esta práctica ha confirmado la efectividad de los códigos de Huffman en la compresión de datos, al reducir la longitud de un texto mediante la asignación de códigos de longitud variable según la frecuencia de cada carácter. La aplicación del Primer Teorema de Shannon a la palabra ``Lorentz'' verificó que estos códigos son óptimos en términos de tamaño promedio, demostrando así su eficiencia en la representación de texto. 
+
+\section{Anexo}
+
+\subsection{Código binario Huffman}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\text{Char} & \text{C. Huffman esp} & \text{C. Huffman ing} \\
+\hline
+a & 000 & 1000 \\
+. & 0010000 & 0100011 \\
+é & 00100010 & - \\
+E & 001000110 & 010001010 \\
+j & 001000111 & - \\
+R & 001001000 & 010001011 \\
+í & 001001001 & - \\
+k & 00100101 & 0000010 \\
+- (guión) & 00100110 & 111000001 \\
+4 & 001001110 & 111000000 \\
+C & 001001111 & - \\
+p & 00101 & 111011 \\
+s & 0011 & 1001 \\
+e & 010 & 001 \\
+r & 0110 & 0101 \\
+m & 01110 & 01101 \\
+u & 01111 & 010000 \\
+n & 1000 & 1011 \\
+o & 1001 & 0111 \\
+(espacio) & 101 & 110 \\
+l & 11000 & 00011 \\
+b & 1100100 & 1110010 \\
+z & 1100101 & 11100110 \\
+q & 11001100 & 11100111 \\
+L & 11001101 & 00000110 \\
+ó & 1100111 & - \\
+i & 1101 & 1111 \\
+d & 11100 & 01100 \\
+t & 11101 & 1010 \\
+c & 11110 & 00001 \\
+f & 1111100 & 00010 \\
+v & 1111101 & 1110101 \\
+M & 111111000 & 00000111 \\
+x & 1111110010 & 010001000 \\
+P & 1111110011 & - \\
+w & 111111010 & 1110001 \\
+g & 111111011 & 0000000 \\
+, & 11111110 & 0000001 \\
+y & 111111110 & 1110100 \\
+h & 111111111 & 01001 \\
+\hline
+\end{tabular}
+\caption{Codificación Huffman para caracteres en español e inglés.}
+\label{tab:huffman}
+\end{table}
+
+
+\newpage
+\subsection{Código implementado}
+\lstinputlisting[language=Python,caption={\texttt{Código de Huffman.py}}, linewidth=\textwidth]{Codigo de Huffman.py}
+
+
+\end{document}
+
